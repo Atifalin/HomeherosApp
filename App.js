@@ -1,22 +1,20 @@
 import { StatusBar } from 'expo-status-bar';
 import { Text, View, StyleSheet } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { AuthProvider } from './contexts/AuthContext';
+import { LocationProvider } from './contexts/LocationContext';
+import AppNavigator from './AppNavigator';
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <View style={styles.container}>
-        <SafeAreaView style={styles.content}>
-          <Text style={styles.title}>
-            Future home of the HomeHeros App
-          </Text>
-          <Text style={styles.subtitle}>
-            Launching in Kelowna – September 2025
-          </Text>
+    <AuthProvider>
+      <LocationProvider>
+        <SafeAreaProvider>
           <StatusBar style="light" />
-        </SafeAreaView>
-      </View>
-    </SafeAreaProvider>
+          <AppNavigator />
+        </SafeAreaProvider>
+      </LocationProvider>
+    </AuthProvider>
   );
 }
 

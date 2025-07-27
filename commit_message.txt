@@ -1,0 +1,10 @@
+Update onboarding flow and location selection
+
+- Updated app version to 0.11 in ProfileScreen
+- Added location bubble in HomeScreen header
+- Attempted to fix navigation to LocationSelection screen
+
+KNOWN ISSUES:
+- Location selection screen not showing after new login (localStorage persistence issue)
+- Location bubble in HomeScreen not opening location selection screen properly
+- Need to fix navigation between screens on web platform
