@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { NavigationContext } from '../AppNavigator.web';
 
 // Import screens
 import HomeScreen from '../screens/HomeScreen';
@@ -11,20 +12,37 @@ import ProfileScreen from '../screens/ProfileScreen';
 // Web-specific tab navigator that doesn't use React Navigation
 export default function TabNavigator() {
   const [activeTab, setActiveTab] = useState('Home');
+  const webNavigation = useContext(NavigationContext);
 
   // Render the active screen based on the selected tab
   const renderScreen = () => {
+    // Create a navigation object that can handle both tab navigation and screen navigation
+    const navigationProxy = {
+      navigate: (screen: string) => {
+        console.log('Navigation requested to:', screen);
+        // If it's a tab, switch tabs
+        if (['Home', 'Services', 'Offers', 'Profile'].includes(screen)) {
+          console.log('Switching to tab:', screen);
+          setActiveTab(screen);
+        } else {
+          // Otherwise use the web navigation context to navigate to other screens
+          console.log('Navigating to screen:', screen);
+          webNavigation.navigate(screen);
+        }
+      }
+    };
+    
     switch (activeTab) {
       case 'Home':
-        return <HomeScreen navigation={{ navigate: (screen) => setActiveTab(screen) }} />;
+        return <HomeScreen navigation={navigationProxy} />;
       case 'Services':
-        return <SpecialServicesScreen />;
+        return <SpecialServicesScreen navigation={navigationProxy} />;
       case 'Offers':
-        return <OffersScreen />;
+        return <OffersScreen navigation={navigationProxy} />;
       case 'Profile':
-        return <ProfileScreen navigation={{ navigate: (screen) => setActiveTab(screen) }} />;
+        return <ProfileScreen navigation={navigationProxy} />;
       default:
-        return <HomeScreen navigation={{ navigate: (screen) => setActiveTab(screen) }} />;
+        return <HomeScreen navigation={navigationProxy} />;
     }
   };
 

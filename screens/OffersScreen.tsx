@@ -2,7 +2,12 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function OffersScreen() {
+// Define navigation prop type
+type NavigationProp = {
+  navigate: (screen: string) => void;
+};
+
+export default function OffersScreen({ navigation }: { navigation?: NavigationProp }) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>

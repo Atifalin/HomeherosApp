@@ -10,11 +10,12 @@ import { useLocation } from './contexts/LocationContext';
 // Simple web-compatible navigation context
 export const NavigationContext = React.createContext({
   currentScreen: 'Splash',
-  navigate: (screen: string) => {},
+  navigate: (screen: string, params?: any) => {},
 });
 
 export default function AppNavigator() {
   const [currentScreen, setCurrentScreen] = useState('Splash');
+  const [screenParams, setScreenParams] = useState<any>(null);
   const { user, loading: authLoading } = useAuth();
   const { location, loading: locationLoading } = useLocation();
   const [initializing, setInitializing] = useState(true);
@@ -29,20 +30,32 @@ export default function AppNavigator() {
       location, 
       authLoading, 
       locationLoading, 
-      currentScreen 
+      currentScreen,
+      screenParams
     });
+    
+    // Check if we're explicitly navigating to LocationSelection with forceShow flag
+    if (currentScreen === 'LocationSelection' && screenParams?.forceShow) {
+      console.log('Showing LocationSelection with forceShow flag');
+      return; // Don't redirect
+    }
     
     // Show location selection if user is logged in but has no location
     if (user && !location && !locationLoading) {
       console.log('Redirecting to LocationSelection - user logged in with no location');
       setCurrentScreen('LocationSelection');
+      setScreenParams(null);
       return;
     }
     
     // Skip to main app if user is logged in and has location
     if (user && location) {
-      console.log('Redirecting to Home - user logged in with location');
-      setCurrentScreen('Home');
+      // Only redirect to Home if we're not explicitly trying to show LocationSelection
+      if (currentScreen !== 'LocationSelection' || !screenParams?.forceShow) {
+        console.log('Redirecting to Home - user logged in with location');
+        setCurrentScreen('Home');
+        setScreenParams(null);
+      }
       return;
     }
     
@@ -50,11 +63,14 @@ export default function AppNavigator() {
     if (!user && !authLoading && currentScreen !== 'Signup') {
       console.log('Redirecting to Login - no user');
       setCurrentScreen('Login');
+      setScreenParams(null);
     }
-  }, [user, location, authLoading, locationLoading, initializing, currentScreen]);
+  }, [user, location, authLoading, locationLoading, initializing, currentScreen, screenParams]);
 
-  const navigate = (screen: string) => {
+  const navigate = (screen: string, params?: any) => {
+    console.log('Navigating to', screen, 'with params:', params);
     setCurrentScreen(screen);
+    setScreenParams(params);
   };
 
   const handleSplashComplete = (hasLocation: boolean) => {

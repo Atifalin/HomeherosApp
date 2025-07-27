@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useContext } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { useLocation } from '../contexts/LocationContext';
+import { NavigationContext } from '../AppNavigator.web';
 import { supabase } from '../lib/supabase';
 
 // List of available locations
@@ -17,10 +19,12 @@ interface LocationSelectionProps {
   onComplete: () => void;
 }
 
-export default function LocationSelectionScreen({ onComplete }: LocationSelectionProps) {
+export default function LocationSelectionScreen({ onComplete, navigation }: LocationSelectionProps & { navigation?: any }) {
   const { user } = useAuth();
+  const { setLocation } = useLocation();
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const webNavigation = useContext(NavigationContext);
 
   const handleLocationSelect = (location: string) => {
     setSelectedLocation(location);
@@ -31,22 +35,25 @@ export default function LocationSelectionScreen({ onComplete }: LocationSelectio
     
     setSaving(true);
     try {
-      // 1. Save to Supabase user profile
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({ 
-          id: user.id,
-          location: selectedLocation,
-          updated_at: new Date().toISOString(),
-        });
+      console.log('Saving location:', selectedLocation);
       
-      if (error) throw error;
+      // Update location in context (this will handle Supabase and localStorage)
+      await setLocation(selectedLocation);
       
-      // 2. Save to localStorage for web (or SecureStore for native)
-      localStorage.setItem('userLocation', selectedLocation);
+      // Navigate based on platform
+      if (Platform.OS === 'web') {
+        console.log('Web platform, navigating to Home');
+        webNavigation.navigate('Home');
+      } else if (navigation) {
+        console.log('Native platform, navigating to Home');
+        navigation.navigate('Home');
+      }
       
-      // 3. Continue to main app
-      onComplete();
+      // Call onComplete if provided (for backward compatibility)
+      if (onComplete) {
+        console.log('Calling onComplete');
+        onComplete();
+      }
     } catch (error) {
       console.error('Error saving location:', error);
       // Show error message to user

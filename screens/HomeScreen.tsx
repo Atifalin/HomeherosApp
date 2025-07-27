@@ -18,11 +18,11 @@ export default function HomeScreen({ navigation }) {
           onPress={() => {
             console.log('Location bubble clicked');
             if (Platform.OS === 'web') {
-              // Use web navigation
-              webNavigation.navigate('LocationSelection');
+              // Use web navigation with forceShow flag to prevent auto-redirect
+              webNavigation.navigate('LocationSelection', { forceShow: true });
             } else {
-              // Use React Navigation
-              navigation.navigate('LocationSelection');
+              // Use React Navigation with params
+              navigation.navigate('LocationSelection', { forceShow: true });
             }
           }}
         >
