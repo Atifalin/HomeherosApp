@@ -1,20 +1,23 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import 'nativewind';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaProvider>
+      <View className="flex-1 bg-[#3B5323]">
+        <SafeAreaView className="flex-1 items-center justify-center px-4">
+          <Text className="text-white text-4xl font-bold text-center mb-4">
+            Future home of the HomeHeros App
+          </Text>
+          <Text className="text-white text-xl text-center">
+            Launching in Kelowna – September 2025
+          </Text>
+          <StatusBar style="light" />
+        </SafeAreaView>
+      </View>
+    </SafeAreaProvider>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
