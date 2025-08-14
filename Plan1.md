@@ -1,0 +1,101 @@
+# HomeHerosApp Project Plan
+
+## Notes
+- Project to be called HomeHerosApp
+- Full-stack: Expo (React Native), React Native Web, Supabase, Tailwind CSS (Nativewind), GitHub, Vercel
+- Must support Web, iOS, and Android from a single Expo codebase
+- Be careful with version dependencies for Vercel deployment (especially Expo + React Native Web + Nativewind compatibility)
+- Research confirms: Use Expo SDK, add react-dom, react-native-web, @expo/webpack-config for web, and follow Nativewind's peer dependency requirements (tailwindcss, react-native-reanimated, react-native-safe-area-context). Use `expo export:web` for Vercel deployment with a web-build directory and a proper vercel.json.
+- Compatibility issue found: Expo 53.0.20 is not compatible with latest @expo/webpack-config (requires Expo ^49.0.7 or ^50.0.0-0). Must resolve dependency conflicts before proceeding with setup.
+- User requested: Do NOT back up, start with a clean slate, delete all files in folder, and re-initialize project with a focus on Vercel web deployment.
+- CI/CD: GitHub + Vercel for web, auto-deploy on push to main, preview on PRs
+- Initial screen: "Coming Soon" with military green background, centered white heading, optional subheading
+- Styling via Nativewind (Tailwind CSS for React Native)
+- Deployment target: Vercel (web), custom domain placeholder is fine
+- Output: GitHub repo link, Vercel preview URL
+- [ISSUE] User sees blank white page on web preview; must diagnose and fix before deployment.
+- [INVESTIGATION] Added styles.css and imported in App.js for Nativewind web compatibility; debugging Nativewind config as likely cause.
+- [PROGRESS] Installed postcss, autoprefixer, and created postcss.config.js for Nativewind compatibility on web.
+- [UPDATE] Switched App.js to use standard React Native styles instead of Nativewind className props to debug blank page issue.
+- [ERROR] Web build fails due to invalid Babel plugins configuration; .plugins is not a valid Plugin property. Need to fix babel.config.js.
+- [ACTION] Removed Nativewind and Reanimated plugins from babel.config.js to simplify and resolve persistent compilation error.
+- [ACTION] Ran `npx expo install --fix` to resolve dependency version mismatches for react-native-reanimated and react-native-safe-area-context.
+- [NOTE] User will run the Supabase migration manually via the dashboard.
+- [FIX] Updated .env and .env.example to use EXPO_PUBLIC_ keys for Expo web compatibility with Supabase.
+- [DEBUG] Added debug logging to /lib/supabase.ts to verify environment variable injection on Expo web.
+- [WORKAROUND] Added custom webpack.config.js and dotenv to explicitly inject environment variables for Expo web compatibility.
+- [FIXED] Environment variables now correctly injected for Expo web via custom webpack config.
+- [NEXT] React Navigation native stack is not web-compatible; must fix navigation error for web platform.
+- [FIXED] React Navigation navigation stack now uses createStackNavigator for web and createNativeStackNavigator for native, resolving 'require is not defined' error on web. Dependencies installed and AppNavigator updated accordingly.
+- [ISSUE] Conditional navigator import still causes 'require is not defined' on web; need platform-specific navigation entry points (e.g., AppNavigator.web.tsx and AppNavigator.native.tsx).
+- [BLOCKER] TypeScript error: Stack.Navigator 'id' prop must be undefined (not string) for both web and native navigators. Fix required before testing login/signup flow.
+- [FIXED] TypeScript error resolved: Stack.Navigator 'id' prop set to undefined in both AppNavigator.web.tsx and AppNavigator.native.tsx. Ready to test authentication flow.
+- [ISSUE] Even with platform-specific navigators, React Navigation's stack implementation causes 'require is not defined' on web. Need a web-compatible navigation workaround.
+- [FIXED] Implemented simple state-based navigation for web; LoginScreen and SignupScreen updated to use context-based navigation instead of React Navigation.
+- [ISSUE] Web app loads and navigation works, but Supabase signup/login fail with 400/422 errors; need to debug and fix authentication on web.
+- [BLOCKER] React Navigation's bottom tabs are not web-compatible and cause a runtime error ("require is not defined"). Need to implement a web-specific tab navigation solution.
+- [FIXED] Supabase authentication (signup/login) now works on web; next step is to implement onboarding flow and location selection after successful authentication.
+- [UPDATE] User requested to skip "Welcome" page and proceed directly to onboarding and location selection after authentication.
+- [SPEC] Onboarding flow: smooth splash screen with HomeHeros logo (animated fade-in/out), then onboarding/login/signup screen with Supabase Auth (email, password, phone). If user is already logged in, skip to location selection. Location selector: Kelowna, Kamloops, Vernon, Penticton, Osoyoos, Oliver. Store location in Supabase DB (user profile) and SecureStore (mobile) or localStorage (web). On future app loads, skip location if already set unless changed. Main app: fluid 4-tab bottom navigation (Home, Special Services, Offers, Profile). Home tab shows selected location at top. Profile tab includes app version, About Us link (https://homeheros.ca/about.html), and "Switch to Go App" button. Design: Tailwind CSS (Nativewind), military green/white, smooth transitions, web mimics mobile, retain location across sessions.
+- [ISSUE] App version in About should be 0.11 (user request)
+- [ISSUE] Location selection screen missing after new login (navigation logic needs further targeted fix)
+- [ISSUE] Clicking location on HomeScreen should open location selection and update Supabase profile (navigation/trigger logic not working yet)
+- [PROGRESS] LocationContext and HomeScreen navigation logic updated to better handle new users and navigation triggers; further testing in progress
+- [FIXED] TabNavigator import path corrected in AppNavigator.web.tsx; navigation logic ready for user testing
+- [ACTION] Commit and push current state to GitHub with comments about remaining issues (location persistence and navigation)
+- [COMPLETED] Code committed and pushed to GitHub with comments about location selection/navigation issues
+- [FIXED] HomeScreen location bubble navigation now handled via TabNavigator.web navigation proxy
+- [FIXED] Profile, Offers, SpecialServices screens in TabNavigator.web receive navigation proxy for consistent navigation logic
+- [FIXED] TypeScript prop errors in TabNavigator.web.tsx (navigation prop not declared on all screens) fixed
+- [PROGRESS] TypeScript prop errors in TabNavigator.web and screens need to be addressed
+
+## Task List
+- [x] Clean folder and remove all files to start fresh
+- [x] Initialize new Expo app (with web support and compatible versions)
+- [x] Add and configure Nativewind (Tailwind CSS) for Expo
+- [x] Add React Native Web, react-dom, @expo/webpack-config, and peer dependencies
+- [x] Set up GitHub repo for HomeHerosApp
+- [x] Implement "Coming Soon" screen with required styling
+- [x] Set up Supabase (Auth + DB ready, even if not used yet)
+- [x] Push initial commit to GitHub
+- [x] Configure Vercel for web deployment (using vercel.json if needed)
+- [x] Diagnose and fix blank white page issue in web build (switched to StyleSheet for debugging)
+- [x] Fix Babel plugins configuration in babel.config.js
+- [x] Check and resolve web server compilation error causing blank page
+- [x] Set up GitHub remote and push latest code
+- [x] Set up CI/CD: auto-deploy on main, preview on PRs
+- [x] Deploy web version to Vercel
+- [x] Set up custom domain (placeholder)
+- [x] Share GitHub repo and Vercel preview URL
+- [x] Fix React Navigation web compatibility error
+- [x] Refactor navigation: use AppNavigator.web.tsx for web and AppNavigator.native.tsx for native to fully resolve platform import issues
+- [x] Fix Stack.Navigator 'id' property TypeScript error in both AppNavigator.web.tsx and AppNavigator.native.tsx
+- [x] Implement simple web-compatible navigation workaround
+- [x] Debug and fix Supabase authentication (signup/login) on web
+- [x] Implement onboarding flow and location selection after successful authentication
+  - [x] Implement smooth splash screen with HomeHeros logo (animated fade-in/out)
+  - [x] Implement onboarding/login/signup screen (with Supabase auth: email, password, phone)
+  - [x] If user is already logged in, skip onboarding to location selection
+  - [x] Implement location selector screen after login/signup (Kelowna, Kamloops, Vernon, Penticton, Osoyoos, Oliver)
+  - [x] Store selected location in Supabase DB (user profile) and SecureStore/localStorage
+  - [x] Retain selected location across sessions (do not ask again unless changed)
+  - [x] Implement fluid 4-tab bottom navigation (Home, Special Services, Offers, Profile)
+    - [x] Create HomeScreen component
+    - [x] Create SpecialServicesScreen component
+    - [x] Create OffersScreen component
+    - [x] Create ProfileScreen component
+    - [x] Integrate screens into tab navigator and style navigation bar
+    - [x] Implement web-specific tab navigation (replace React Navigation tabs for web)
+    - [x] Home tab shows selected location at top in round bubble with location icon
+    - [x] Profile tab includes app version, About Us link, and "Switch to Go App" button
+    - [x] Fix shadow styling in TabNavigator.web.tsx
+    - [ ] Style app with Tailwind CSS (Nativewind), military green/white, smooth transitions
+    - [ ] Web version mimics mobile app design (narrow container, center alignment)
+    - [x] Update app version in About to 0.11
+    - [x] Make HomeScreen location bubble open location selector and update Supabase profile (fix navigation/trigger logic)
+    - [ ] Confirm navigation and persistence logic for location selection is working as expected
+    - [x] Commit and push current state to GitHub with comments about remaining issues
+    - [x] Fix navigation prop TypeScript errors in TabNavigator.web and screens
+
+## Current Goal
+Continue fixing location selection navigation and persistence issues, and confirm navigation and persistence logic for location selection

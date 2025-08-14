@@ -1,3 +1,7 @@
+import { Platform } from 'react-native';
+if (Platform.OS !== 'web') {
+  require('react-native-url-polyfill/auto');
+}
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
@@ -7,8 +11,19 @@ interface AuthContextProps {
   session: Session | null;
   loading: boolean;
   signUp: (email: string, password: string, phone?: string) => Promise<{ error: any } | undefined>;
+  signUpHomeherosGo: (userData: HomeherosGoSignupData) => Promise<{ error: any } | undefined>;
   signIn: (email: string, password: string) => Promise<{ error: any } | undefined>;
   signOut: () => Promise<void>;
+}
+
+interface HomeherosGoSignupData {
+  email: string;
+  password: string;
+  name: string;
+  phone: string;
+  address: string;
+  userType: 'homehero' | 'contractor';
+  applicationData: any;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -47,6 +62,60 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error };
   };
 
+  const signUpHomeherosGo = async (userData: HomeherosGoSignupData) => {
+    try {
+      // First create the auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          data: {
+            name: userData.name,
+            phone: userData.phone,
+            user_type: userData.userType,
+            status: 'pending'
+          }
+        }
+      });
+
+      if (authError) {
+        console.error('[DEBUG] HomeherosGo auth signup error:', authError);
+        return { error: authError };
+      }
+
+      // Create or update profile record with pending status
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: authData.user.id,
+            name: userData.name,
+            phone: userData.phone,
+            address: userData.address,
+            email: userData.email,
+            user_type: userData.userType,
+            status: 'pending',
+            application_data: userData.applicationData,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'id'
+          });
+
+        if (profileError) {
+          console.error('[DEBUG] HomeherosGo profile creation error:', profileError);
+          return { error: profileError };
+        }
+      }
+
+      console.log('[DEBUG] HomeherosGo signup successful');
+      return { error: null };
+    } catch (error) {
+      console.error('[DEBUG] HomeherosGo signup unexpected error:', error);
+      return { error };
+    }
+  };
+
   const signIn = async (email: string, password: string) => {
     const payload = { email, password };
     console.log('[DEBUG] Login payload:', payload);
@@ -60,7 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signUp, signUpHomeherosGo, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

@@ -3,6 +3,8 @@ import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
 import SplashScreen from './screens/SplashScreen';
 import LocationSelectionScreen from './screens/LocationSelectionScreen';
+import HomeherosGoOnboardingScreen from './screens/HomeherosGoOnboardingScreen';
+import AdminDashboardScreen from './screens/AdminDashboardScreen';
 import TabNavigator from './navigation/TabNavigator.web';
 import { useAuth } from './contexts/AuthContext';
 import { useLocation } from './contexts/LocationContext';
@@ -40,6 +42,18 @@ export default function AppNavigator() {
       return; // Don't redirect
     }
     
+    // Allow HomeherosGo onboarding without authentication
+    if (currentScreen === 'HomeherosGoOnboarding') {
+      console.log('Staying on HomeherosGo onboarding screen');
+      return;
+    }
+    
+    // Allow AdminDashboard access for authenticated users
+    if (currentScreen === 'AdminDashboard') {
+      console.log('Staying on AdminDashboard screen');
+      return;
+    }
+    
     // Show location selection if user is logged in but has no location
     if (user && !location && !locationLoading) {
       console.log('Redirecting to LocationSelection - user logged in with no location');
@@ -48,22 +62,20 @@ export default function AppNavigator() {
       return;
     }
     
-    // Skip to main app if user is logged in and has location
-    if (user && location) {
-      // Only redirect to Home if we're not explicitly trying to show LocationSelection
-      if (currentScreen !== 'LocationSelection' || !screenParams?.forceShow) {
-        console.log('Redirecting to Home - user logged in with location');
-        setCurrentScreen('Home');
-        setScreenParams(null);
-      }
+    // Show main app if user is logged in and has location (but only if not on a specific screen)
+    if (user && location && currentScreen === 'Splash') {
+      console.log('Redirecting to Home - user logged in with location');
+      setCurrentScreen('Home');
+      setScreenParams(null);
       return;
     }
     
-    // Show login if user is not logged in and we're not on signup
-    if (!user && !authLoading && currentScreen !== 'Signup') {
+    // Show login if no user (but not if on signup or HomeherosGo onboarding)
+    if (!user && !authLoading && currentScreen !== 'Signup' && currentScreen !== 'HomeherosGoOnboarding') {
       console.log('Redirecting to Login - no user');
       setCurrentScreen('Login');
       setScreenParams(null);
+      return;
     }
   }, [user, location, authLoading, locationLoading, initializing, currentScreen, screenParams]);
 
@@ -72,6 +84,22 @@ export default function AppNavigator() {
     setCurrentScreen(screen);
     setScreenParams(params);
   };
+
+  // Listen for custom navigation events from components
+  useEffect(() => {
+    const handleNavigationEvent = (event: CustomEvent) => {
+      console.log('Custom navigation event received:', event.detail);
+      if (event.detail && event.detail.screen) {
+        navigate(event.detail.screen, event.detail.params);
+      }
+    };
+
+    window.addEventListener('navigate', handleNavigationEvent as EventListener);
+    
+    return () => {
+      window.removeEventListener('navigate', handleNavigationEvent as EventListener);
+    };
+  }, []);
 
   const handleSplashComplete = (hasLocation: boolean) => {
     setInitializing(false);
@@ -90,6 +118,10 @@ export default function AppNavigator() {
         return <LoginScreen />;
       case 'Signup':
         return <SignupScreen />;
+      case 'HomeherosGoOnboarding':
+        return <HomeherosGoOnboardingScreen />;
+      case 'AdminDashboard':
+        return <AdminDashboardScreen />;
       case 'LocationSelection':
         return <LocationSelectionScreen onComplete={handleLocationSelected} />;
       case 'Home':

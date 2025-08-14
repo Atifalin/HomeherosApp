@@ -25,9 +25,11 @@ export default function TabNavigator() {
           console.log('Switching to tab:', screen);
           setActiveTab(screen);
         } else {
-          // Otherwise use the web navigation context to navigate to other screens
-          console.log('Navigating to screen:', screen);
-          webNavigation.navigate(screen);
+          // For other screens like AdminDashboard, use custom event navigation
+          console.log('Navigating to screen via custom event:', screen);
+          window.dispatchEvent(new CustomEvent('navigate', {
+            detail: { screen: screen }
+          }));
         }
       }
     };

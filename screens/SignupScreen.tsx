@@ -1,10 +1,28 @@
 import React, { useState, useContext } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
-import { NavigationContext } from '../AppNavigator.web';
+import { Platform } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 
-export default function SignupScreen() {
-  const { navigate } = useContext(NavigationContext);
+// Import NavigationContext properly for web
+let NavigationContext: React.Context<any> | undefined;
+if (Platform.OS === 'web') {
+  try {
+    NavigationContext = require('../AppNavigator.web').NavigationContext;
+  } catch (error) {
+    console.warn('Failed to import NavigationContext:', error);
+  }
+}
+
+export default function SignupScreen({ navigation }: { navigation?: any }) {
+  // Use platform-specific navigation
+  let webNavigation = null;
+  try {
+    if (Platform.OS === 'web' && NavigationContext) {
+      webNavigation = useContext(NavigationContext);
+    }
+  } catch (error) {
+    console.warn('Error accessing NavigationContext:', error);
+  }
   const { signUp, loading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -56,7 +74,17 @@ export default function SignupScreen() {
       >
         {submitting ? <ActivityIndicator color="#3B5323" /> : <Text style={styles.buttonText}>Sign Up</Text>}
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigate('Login')}>
+      <TouchableOpacity onPress={() => {
+        // For web navigation
+        if (Platform.OS === 'web') {
+          window.dispatchEvent(new CustomEvent('navigate', {
+            detail: { screen: 'Login' }
+          }));
+        } else {
+          // For native navigation
+          navigation?.navigate('Login');
+        }
+      }}>
         <Text style={styles.link}>Already have an account? Login</Text>
       </TouchableOpacity>
     </View>

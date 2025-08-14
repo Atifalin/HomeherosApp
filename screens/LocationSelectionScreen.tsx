@@ -2,7 +2,17 @@ import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation } from '../contexts/LocationContext';
-import { NavigationContext } from '../AppNavigator.web';
+
+// Platform-specific imports
+let NavigationContext: React.Context<any> | undefined;
+if (Platform.OS === 'web') {
+  try {
+    NavigationContext = require('../AppNavigator.web').NavigationContext;
+  } catch (error) {
+    console.warn('Failed to import NavigationContext:', error);
+  }
+}
+
 import { supabase } from '../lib/supabase';
 
 // List of available locations
@@ -24,7 +34,15 @@ export default function LocationSelectionScreen({ onComplete, navigation }: Loca
   const { setLocation } = useLocation();
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const webNavigation = useContext(NavigationContext);
+  // Use platform-specific navigation safely
+  let webNavigation = null;
+  try {
+    if (Platform.OS === 'web' && NavigationContext) {
+      webNavigation = useContext(NavigationContext);
+    }
+  } catch (error) {
+    console.warn('Error accessing NavigationContext:', error);
+  }
 
   const handleLocationSelect = (location: string) => {
     setSelectedLocation(location);
@@ -41,12 +59,15 @@ export default function LocationSelectionScreen({ onComplete, navigation }: Loca
       await setLocation(selectedLocation);
       
       // Navigate based on platform
-      if (Platform.OS === 'web') {
+      if (Platform.OS === 'web' && webNavigation) {
         console.log('Web platform, navigating to Home');
         webNavigation.navigate('Home');
       } else if (navigation) {
         console.log('Native platform, navigating to Home');
-        navigation.navigate('Home');
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'MainTabs' }],
+        });
       }
       
       // Call onComplete if provided (for backward compatibility)

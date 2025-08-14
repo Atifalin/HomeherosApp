@@ -3,12 +3,18 @@ import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native
 import { useLocation } from '../contexts/LocationContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { NavigationContext } from '../AppNavigator.web';
 
-export default function HomeScreen({ navigation }) {
+// Platform-specific imports
+let NavigationContext: React.Context<any> | undefined;
+if (Platform.OS === 'web') {
+  // Only import from web navigator on web platform
+  NavigationContext = require('../AppNavigator.web').NavigationContext;
+}
+
+export default function HomeScreen({ navigation }: { navigation?: any }) {
   const { location } = useLocation();
-  // Get web navigation context if available
-  const webNavigation = useContext(NavigationContext);
+  // Get web navigation context if available - only call useContext if NavigationContext exists
+  const webNavigation = Platform.OS === 'web' && NavigationContext ? useContext(NavigationContext) : null;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -17,7 +23,7 @@ export default function HomeScreen({ navigation }) {
           style={styles.locationBubble}
           onPress={() => {
             console.log('Location bubble clicked');
-            if (Platform.OS === 'web') {
+            if (Platform.OS === 'web' && webNavigation) {
               // Use web navigation with forceShow flag to prevent auto-redirect
               webNavigation.navigate('LocationSelection', { forceShow: true });
             } else {

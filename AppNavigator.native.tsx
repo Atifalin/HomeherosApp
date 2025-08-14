@@ -5,7 +5,9 @@ import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
 import SplashScreen from './screens/SplashScreen';
 import LocationSelectionScreen from './screens/LocationSelectionScreen';
-import TabNavigator from './navigation/TabNavigator';
+import HomeherosGoOnboardingScreen from './screens/HomeherosGoOnboardingScreen';
+import AdminDashboardScreen from './screens/AdminDashboardScreen';
+import TabNavigator from './navigation/TabNavigator.native';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useAuth } from './contexts/AuthContext';
 import { useLocation } from './contexts/LocationContext';
@@ -79,6 +81,8 @@ export default function AppNavigator() {
         <Stack.Screen name="Splash" component={SplashScreenWrapper} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Signup" component={SignupScreen} />
+        <Stack.Screen name="HomeherosGoOnboarding" component={HomeherosGoOnboardingScreen} />
+        <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
         <Stack.Screen name="LocationSelection" component={LocationScreenWrapper} />
         <Stack.Screen name="MainTabs" component={TabNavigator} options={{ headerShown: false }} />
       </Stack.Navigator>

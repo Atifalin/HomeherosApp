@@ -1,6 +1,33 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+
+// Create a platform-specific storage helper
+const Storage = {
+  getItem: async (key: string): Promise<string | null> => {
+    if (Platform.OS === 'web') {
+      return localStorage.getItem(key);
+    } else {
+      return await AsyncStorage.getItem(key);
+    }
+  },
+  setItem: async (key: string, value: string): Promise<void> => {
+    if (Platform.OS === 'web') {
+      localStorage.setItem(key, value);
+    } else {
+      await AsyncStorage.setItem(key, value);
+    }
+  },
+  removeItem: async (key: string): Promise<void> => {
+    if (Platform.OS === 'web') {
+      localStorage.removeItem(key);
+    } else {
+      await AsyncStorage.removeItem(key);
+    }
+  }
+};
 
 interface LocationContextProps {
   location: string | null;
@@ -20,7 +47,7 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
     if (!user) {
       // Clear location data when user logs out
       setLocationState(null);
-      localStorage.removeItem('userLocation');
+      Storage.removeItem('userLocation');
       setLoading(false);
     }
   }, [user]);
@@ -55,19 +82,22 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
             .from('profiles')
             .select('location')
             .eq('id', user.id)
-            .single();
+            .maybeSingle(); // Use maybeSingle() instead of single() to handle missing profiles
           
-          if (error || !data?.location) {
+          if (error) {
+            console.error('Error fetching profile location:', error);
+            setLocationState(null);
+          } else if (!data?.location) {
             console.log('New user or no location in profile, showing location selection');
             setLocationState(null);
           } else {
             console.log('Found location in Supabase for new login:', data.location);
             setLocationState(data.location);
-            localStorage.setItem('userLocation', data.location);
+            await Storage.setItem('userLocation', data.location);
           }
         } else {
-          // Not a new login, use normal flow with localStorage cache
-          const storedLocation = localStorage.getItem('userLocation');
+          // Not a new login, use normal flow with storage cache
+          const storedLocation = await Storage.getItem('userLocation');
           
           if (storedLocation) {
             console.log('Found location in localStorage:', storedLocation);
@@ -79,18 +109,18 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
               .from('profiles')
               .select('location')
               .eq('id', user.id)
-              .single();
+              .maybeSingle(); // Use maybeSingle() instead of single()
             
             if (error) {
-              console.log('Error or no profile found:', error);
-              // If the profile doesn't exist yet or has no location, leave location as null
+              console.error('Error fetching profile location:', error);
+              // If there's an error, leave location as null
               // This will trigger the location selection screen
               setLocationState(null);
             } else if (data?.location) {
               console.log('Found location in Supabase:', data.location);
               setLocationState(data.location);
-              // Also save to localStorage for future use
-              localStorage.setItem('userLocation', data.location);
+              // Also save to storage for future use
+              await Storage.setItem('userLocation', data.location);
             } else {
               console.log('No location found in Supabase');
               setLocationState(null);
@@ -117,8 +147,8 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
       // Update in state
       setLocationState(newLocation);
       
-      // Save to localStorage
-      localStorage.setItem('userLocation', newLocation);
+      // Save to storage
+      await Storage.setItem('userLocation', newLocation);
       
       // Save to Supabase
       await supabase

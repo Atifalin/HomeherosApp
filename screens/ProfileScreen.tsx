@@ -1,11 +1,38 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import Constants from 'expo-constants';
 
 export default function ProfileScreen({ navigation }) {
   const { user, signOut } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  useEffect(() => {
+    checkAdminStatus();
+  }, [user]);
+
+  const checkAdminStatus = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .rpc('has_role', { 
+          user_id: user.id, 
+          role_name: 'admin' 
+        });
+
+      if (error) {
+        console.error('Error checking admin status:', error);
+        return;
+      }
+
+      setIsAdmin(data === true);
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+    }
+  };
   
   const handleSignOut = async () => {
     await signOut();
@@ -18,6 +45,18 @@ export default function ProfileScreen({ navigation }) {
   
   const handleSwitchToGoApp = () => {
     Linking.openURL('https://homeheros.ca/go-app');
+  };
+
+  const handleAdminDashboard = () => {
+    // For web navigation
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('navigate', {
+        detail: { screen: 'AdminDashboard' }
+      }));
+    } else {
+      // For native navigation
+      navigation.navigate('AdminDashboard');
+    }
   };
 
   return (
@@ -55,6 +94,16 @@ export default function ProfileScreen({ navigation }) {
           </TouchableOpacity>
         </View>
         
+        {isAdmin && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Admin</Text>
+            
+            <TouchableOpacity style={[styles.menuItem, styles.adminMenuItem]} onPress={handleAdminDashboard}>
+              <Text style={[styles.menuItemText, styles.adminMenuItemText]}>🛠️ Admin Dashboard</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>More</Text>
           
@@ -169,6 +218,16 @@ const styles = StyleSheet.create({
   menuItemText: {
     fontSize: 16,
     color: '#333',
+  },
+  adminMenuItem: {
+    backgroundColor: '#FFF5F0',
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF6B35',
+  },
+  adminMenuItemText: {
+    fontSize: 16,
+    color: '#FF6B35',
+    fontWeight: 'bold',
   },
   signOutButton: {
     backgroundColor: '#ff3b30',
